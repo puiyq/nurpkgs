@@ -1,75 +1,44 @@
-# This file provides all the buildable and cacheable packages and
-# package outputs in your package set. These are what gets built by CI,
-# so if you correctly mark packages as
-#
-# - broken (using `meta.broken`),
-# - unfree (using `meta.license.free`), and
-# - locally built (using `preferLocalBuild`)
-#
-# then your CI will be able to build and cache only those packages for
-# which this is possible.
-
+# Buildable and cacheable package outputs from the flake's locked Nixpkgs.
 {
-  pkgs ? import <nixpkgs> { },
+  system ? builtins.currentSystem,
 }:
 
-with builtins;
 let
-  isReserved =
-    n:
-    n == "lib"
-    || n == "overlays"
-    || n == "nixosModules"
-    || n == "homeModules"
-    || n == "darwinModules"
-    || n == "flakeModules";
-  isDerivation = p: isAttrs p && p ? type && p.type == "derivation";
-  isBuildable =
-    p:
-    let
-      licenseFromMeta = p.meta.license or [ ];
-      licenseList = if builtins.isList licenseFromMeta then licenseFromMeta else [ licenseFromMeta ];
-    in
-    !(p.meta.broken or false) && builtins.all (license: license.free or true) licenseList;
-  isCacheable = p: !(p.preferLocalBuild or false);
-  shouldRecurseForDerivations = p: isAttrs p && p.recurseForDerivations or false;
-
-  nameValuePair = n: v: {
-    name = n;
-    value = v;
+  lock = builtins.fromJSON (builtins.readFile ./flake.lock);
+  nixpkgsNode = lock.nodes.${lock.nodes.root.inputs.nixpkgs};
+  nixpkgs = fetchTarball {
+    inherit (nixpkgsNode.locked) url;
+    sha256 = nixpkgsNode.locked.narHash;
   };
+  pkgs = import nixpkgs { inherit system; };
+  packages = (import ./lib/mk-packages.nix) pkgs.lib pkgs;
 
-  concatMap = builtins.concatMap or (f: xs: concatLists (map f xs));
-
-  flattenPkgs =
-    s:
+  isDerivation = package: builtins.isAttrs package && (package.type or null) == "derivation";
+  isBuildable =
+    package:
     let
-      f =
-        p:
-        if shouldRecurseForDerivations p then
-          flattenPkgs p
-        else if isDerivation p then
-          [ p ]
-        else
-          [ ];
+      license = package.meta.license or [ ];
+      licenses = if builtins.isList license then license else [ license ];
     in
-    concatMap f (attrValues s);
+    !(package.meta.broken or false) && builtins.all (item: item.free or true) licenses;
+  isCacheable = package: !(package.preferLocalBuild or false);
 
-  outputsOf = p: map (o: p.${o}) p.outputs;
+  flattenPackages =
+    value:
+    if isDerivation value then
+      [ value ]
+    else if builtins.isAttrs value then
+      builtins.concatLists (map flattenPackages (builtins.attrValues value))
+    else
+      [ ];
 
-  nurAttrs = import ./default.nix { inherit pkgs; };
-
-  nurPkgs = flattenPkgs (
-    listToAttrs (
-      map (n: nameValuePair n nurAttrs.${n}) (filter (n: !isReserved n) (attrNames nurAttrs))
-    )
-  );
-
+  packageList = builtins.concatLists (map flattenPackages (builtins.attrValues packages));
+  buildPkgs = builtins.filter isBuildable packageList;
+  cachePkgs = builtins.filter isCacheable buildPkgs;
+  outputsOf = package: map (output: package.${output}) package.outputs;
 in
-rec {
-  buildPkgs = filter isBuildable nurPkgs;
-  cachePkgs = filter isCacheable buildPkgs;
-
-  buildOutputs = concatMap outputsOf buildPkgs;
-  cacheOutputs = concatMap outputsOf cachePkgs;
+{
+  inherit buildPkgs cachePkgs;
+  buildOutputs = builtins.concatLists (map outputsOf buildPkgs);
+  cacheOutputs = builtins.concatLists (map outputsOf cachePkgs);
 }
