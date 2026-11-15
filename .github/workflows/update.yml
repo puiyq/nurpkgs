@@ -1,0 +1,78 @@
+name: Update packages and flake
+
+on:
+  schedule:
+    - cron: "0 5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+
+      - name: Update flake inputs
+        run: nix flake update
+
+      - name: Run package update scripts
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          packages=$(nix eval --json --expr '
+            let
+              packages = (builtins.getFlake (toString ./.)).packages.x86_64-linux;
+              hasUpdateScript = _: package:
+                package ? passthru && package.passthru ? updateScript;
+            in
+              builtins.attrNames (builtins.filterAttrs hasUpdateScript packages)
+          ' | jq -r '.[]')
+
+          run_update_script() {
+            local package="$1"
+            local script_ref=".#packages.x86_64-linux.$package.passthru.updateScript"
+            local is_derivation script_path executable
+
+            echo "Running update script for $package"
+            is_derivation=$(nix eval --raw --expr "builtins.isDerivation ((builtins.getFlake (toString ./.)).packages.x86_64-linux.$package.passthru.updateScript)")
+
+            if [ "$is_derivation" = true ]; then
+              script_path=$(nix build --no-link --print-out-paths "$script_ref")
+              executable=$(find "$script_path" -type f -executable -print -quit)
+              if [ -z "$executable" ]; then
+                echo "No executable found in update script output: $script_path" >&2
+                return 1
+              fi
+              "$executable"
+            else
+              script_path=$(nix eval --raw "$script_ref")
+              nix-shell "$script_path"
+            fi
+          }
+
+          while IFS= read -r package; do
+            run_update_script "$package"
+          done <<< "$packages"
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: update packages and flake inputs"
+          title: "chore: update packages and flake inputs"
+          body: |
+            Automated daily update of flake inputs and package sources.
+          branch: automated/update-packages-and-flake
+          delete-branch: true
