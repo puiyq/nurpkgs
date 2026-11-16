@@ -48,7 +48,9 @@ rustPlatform.buildRustPackage (finalAttrs: {
       }
   '';
 
-  passthru.updateScript = nix-update-script { };
+  passthru.updateScript = nix-update-script {
+    extraArgs = [ "--flake" ];
+  };
 
   meta = {
     description = "Terminal user interface (TUI) client for Bilibili";

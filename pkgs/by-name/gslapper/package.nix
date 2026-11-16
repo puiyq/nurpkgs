@@ -59,7 +59,9 @@ stdenv.mkDerivation (finalAttrs: {
     gst-libav
   ]);
 
-  passthru.updateScript = nix-update-script { };
+  passthru.updateScript = nix-update-script {
+    extraArgs = [ "--flake" ];
+  };
 
   meta = {
     description = "Wayland wallpaper daemon for static images and video using GStreamer";
