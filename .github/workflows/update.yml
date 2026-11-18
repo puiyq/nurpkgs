@@ -26,6 +26,8 @@ jobs:
 
       - name: Update packages
         run: |
+          export NIX_PATH="nixpkgs=$(nix eval --raw --impure --expr '(builtins.getFlake (toString ./.)).inputs.nixpkgs.outPath')"
+
           packages=$(nix eval --raw .#packages.x86_64-linux --apply '
             ps: builtins.concatStringsSep "\n" (
               builtins.filter
