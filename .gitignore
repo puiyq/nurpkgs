@@ -1,4 +1,4 @@
 .envrc
-result/
-result-*/
+result
+result-*
 .direnv/
