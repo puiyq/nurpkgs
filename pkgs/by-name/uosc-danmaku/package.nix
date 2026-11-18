@@ -6,7 +6,7 @@
 }:
 stdenvNoCC.mkDerivation (_finalAttrs: {
   pname = "uosc-danmaku";
-  version = "0-unstable-2026-10-30";
+  version = "2.2.0-alpha-unstable-2026-10-30";
 
   src = fetchFromGitHub {
     owner = "Tony15246";
