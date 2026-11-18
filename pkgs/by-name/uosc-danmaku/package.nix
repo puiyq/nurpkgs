@@ -2,11 +2,10 @@
   lib,
   stdenvNoCC,
   fetchFromGitHub,
-  nix-update-script,
 }:
 stdenvNoCC.mkDerivation (_finalAttrs: {
   pname = "uosc-danmaku";
-  version = "2.2.0-alpha-unstable-2026-10-30";
+  version = "0-unstable-2026-10-30";
 
   src = fetchFromGitHub {
     owner = "Tony15246";
@@ -31,12 +30,7 @@ stdenvNoCC.mkDerivation (_finalAttrs: {
   '';
 
   passthru = {
-    updateScript = nix-update-script {
-      extraArgs = [
-        "--flake"
-        "--version=branch"
-      ];
-    };
+    updateScript = ./update.nu;
     scriptName = "uosc_danmaku";
   };
 

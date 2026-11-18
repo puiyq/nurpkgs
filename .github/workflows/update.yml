@@ -25,6 +25,8 @@ jobs:
         run: nix flake update
 
       - name: Update packages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           export NIX_PATH="nixpkgs=$(nix eval --raw --impure --expr '(builtins.getFlake (toString ./.)).inputs.nixpkgs.outPath')"
 
