@@ -17,13 +17,13 @@
 
 stdenv.mkDerivation (finalAttrs: {
   pname = "gslapper";
-  version = "1.5.4";
+  version = "1.6.0";
 
   src = fetchFromGitHub {
     owner = "Nomadcxx";
     repo = "gSlapper";
     tag = "v${finalAttrs.version}";
-    hash = "sha256-Otjo4a/Yz2ozT0jeJtW7du69dnw/cuYHzHiwNcxyD9Y=";
+    hash = "sha256-0t8mGFHx1fo7kS2ug85un8hlsgVbJBhHpXT/aV2Lb8Q=";
   };
 
   strictDeps = true;
