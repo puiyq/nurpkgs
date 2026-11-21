@@ -2,10 +2,16 @@
 {
   imports = [ inputs.flake-parts.flakeModules.partitions ];
 
-  partitionedAttrs.formatter = "formatter";
+  partitionedAttrs = {
+    formatter = "dev";
+    apps = "dev";
+  };
 
-  partitions.formatter = {
+  partitions.dev = {
     extraInputsFlake = ./.;
-    module = ./formatter.nix;
+    module.imports = [
+      ./formatter.nix
+      ./update.nix
+    ];
   };
 }

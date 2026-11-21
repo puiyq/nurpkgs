@@ -10,10 +10,33 @@ permissions:
   pull-requests: write
 
 jobs:
-  update:
+  list:
     runs-on: ubuntu-latest
+    outputs:
+      targets: ${{ steps.list.outputs.targets }}
     steps:
       - uses: actions/checkout@v7
+
+      - uses: cachix/install-nix-action@v31
+        with:
+          extra_nix_config: experimental-features = nix-command flakes
+
+      - id: list
+        run: echo "targets=$(nix run .#update -- list)" >> "$GITHUB_OUTPUT"
+
+  update:
+    needs: list
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target: ${{ fromJSON(needs.list.outputs.targets) }}
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - uses: cachix/install-nix-action@v31
         with:
@@ -22,32 +45,4 @@ jobs:
             experimental-features = nix-command flakes
             access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
 
-      - name: Update flake inputs
-        run: nix flake update
-
-      - name: Update packages
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          for script in pkgs/by-name/*/update.nu; do
-            package=$(basename "$(dirname "$script")")
-            echo "::group::$package"
-            if ! UPDATE_NIX_ATTR_PATH="$package" \
-              UPDATE_NIX_OLD_VERSION="$(nix eval --raw ".#$package.version")" \
-              "$script"; then
-              echo "::warning title=Update failed::$package"
-            fi
-            echo "::endgroup::"
-          done
-
-      - name: Format
-        run: nix fmt
-
-      - uses: peter-evans/create-pull-request@v8
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "chore: update packages and flake inputs"
-          title: "chore: update packages and flake inputs"
-          body: Automated daily update of flake inputs and package sources.
-          branch: automated/update-packages-and-flake
-          delete-branch: true
+      - run: nix run .#update -- update "${{ matrix.target }}"
