@@ -38,7 +38,6 @@ jobs:
             )
           ')
 
-
           while IFS= read -r package; do
             echo "::group::$package"
             nix flake archive .
@@ -47,6 +46,9 @@ jobs:
             fi
             echo "::endgroup::"
           done <<< "$packages"
+
+      - name: Format
+        run: nix fmt
 
       - uses: peter-evans/create-pull-request@v7
         with:
