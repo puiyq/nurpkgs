@@ -2,7 +2,7 @@
   lib,
   fetchFromGitHub,
   fetchpatch2,
-  flutter,
+  flutter347,
   buildPackages,
   makeBinaryWrapper,
   makeDesktopItem,
@@ -11,6 +11,9 @@
   mpv-unwrapped,
   webkitgtk_4_1,
 }:
+let
+  flutter = flutter347;
+in
 flutter.buildFlutterApplication (finalAttrs: {
   pname = "pilinara";
   version = "2.2.0";
