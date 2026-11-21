@@ -13,7 +13,7 @@ in
     run0-pkexec-shim = {
       enable = lib.mkEnableOption "run0-pkexec-shim instead of setuid pkexec";
       package = lib.mkPackageOption pkgs "run0-pkexec-shim" { } // {
-        default = self.packages.${pkgs.stdenv.hostPlatform.system}.run0-pkexec-shim;
+        default = pkgs.run0-pkexec-shim;
       };
     };
   };
