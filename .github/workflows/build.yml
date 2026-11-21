@@ -28,7 +28,7 @@ jobs:
         run: nix eval --json .#packages.x86_64-linux --apply builtins.attrNames
 
       - name: Setup Cachix
-        uses: cachix/cachix-action@v16
+        uses: cachix/cachix-action@v17
         with:
           name: puiyq
           signingKey: ${{ secrets.CACHIX_SIGNING_KEY }}
