@@ -17,6 +17,7 @@ jobs:
 
       - uses: cachix/install-nix-action@v31
         with:
+          nix_path: nixpkgs=channel:nixos-unstable
           extra_nix_config: |
             experimental-features = nix-command flakes
             access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
@@ -28,9 +29,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          export NIX_PATH="nixpkgs=$(nix eval --raw --impure --expr '(builtins.getFlake (toString ./.)).inputs.nixpkgs.outPath')"
-
-
           for script in pkgs/by-name/*/update.nu; do
             package=$(basename "$(dirname "$script")")
             echo "::group::$package"
