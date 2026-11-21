@@ -30,22 +30,17 @@ jobs:
         run: |
           export NIX_PATH="nixpkgs=$(nix eval --raw --impure --expr '(builtins.getFlake (toString ./.)).inputs.nixpkgs.outPath')"
 
-          packages=$(nix eval --raw .#packages.x86_64-linux --apply '
-            ps: builtins.concatStringsSep "\n" (
-              builtins.filter
-                (name: (ps.${name}.passthru or { }) ? updateScript)
-                (builtins.attrNames ps)
-            )
-          ')
 
-          while IFS= read -r package; do
+          for script in pkgs/by-name/*/update.nu; do
+            package=$(basename "$(dirname "$script")")
             echo "::group::$package"
-            nix flake archive .
-            if ! nix run nixpkgs#nix-update -- "$package" --flake --use-update-script; then
+            if ! UPDATE_NIX_ATTR_PATH="$package" \
+              UPDATE_NIX_OLD_VERSION="$(nix eval --raw ".#$package.version")" \
+              "$script"; then
               echo "::warning title=Update failed::$package"
             fi
             echo "::endgroup::"
-          done <<< "$packages"
+          done
 
       - name: Format
         run: nix fmt

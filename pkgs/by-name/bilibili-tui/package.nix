@@ -2,7 +2,6 @@
   lib,
   rustPlatform,
   fetchFromGitHub,
-  nix-update-script,
   stdenv,
   pkg-config,
   makeBinaryWrapper,
@@ -48,9 +47,7 @@ rustPlatform.buildRustPackage (finalAttrs: {
       }
   '';
 
-  passthru.updateScript = nix-update-script {
-    extraArgs = [ "--flake" ];
-  };
+  passthru.updateScript = ./update.nu;
 
   meta = {
     description = "Terminal user interface (TUI) client for Bilibili";

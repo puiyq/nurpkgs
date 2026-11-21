@@ -13,7 +13,6 @@
   systemd,
   gst_all_1,
   wrapGAppsNoGuiHook,
-  nix-update-script,
 }:
 
 stdenv.mkDerivation (finalAttrs: {
@@ -59,9 +58,7 @@ stdenv.mkDerivation (finalAttrs: {
     gst-libav
   ]);
 
-  passthru.updateScript = nix-update-script {
-    extraArgs = [ "--flake" ];
-  };
+  passthru.updateScript = ./update.nu;
 
   meta = {
     description = "Wayland wallpaper daemon for static images and video using GStreamer";
