@@ -15,17 +15,17 @@
 }:
 rustPlatform.buildRustPackage (finalAttrs: {
   pname = "bilibili-tui";
-  version = "1.0.14";
+  version = "1.1.0";
   __structuredAttrs = true;
 
   src = fetchFromGitHub {
     owner = "MareDevi";
     repo = "bilibili-tui";
     tag = "v${finalAttrs.version}";
-    hash = "sha256-DKcjIPBNAA2iUO7Evfn6muZpOB8pUEmLCr3oEd/A6io=";
+    hash = "sha256-K9l+ScWACmlaWaQS1dDs9ia5lHVLZ/GssqttTyla91Q=";
   };
 
-  cargoHash = "sha256-YxCvFCRtnIUxXgZWBvhKnjeth8TX+3iHcOxPQX8d6Ck=";
+  cargoHash = "sha256-F5zxa4euSZUnLBNvtyct3aHKNyWTig9k7diNG52zEw0=";
 
   nativeBuildInputs = [
     makeBinaryWrapper
