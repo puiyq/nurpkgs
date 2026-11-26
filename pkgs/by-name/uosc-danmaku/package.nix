@@ -5,13 +5,13 @@
 }:
 stdenvNoCC.mkDerivation (_finalAttrs: {
   pname = "uosc-danmaku";
-  version = "0-unstable-2026-10-30";
+  version = "0-unstable-2026-11-25";
 
   src = fetchFromGitHub {
     owner = "Tony15246";
     repo = "uosc_danmaku";
-    rev = "d896f179aac1c9e7e657664dbe8a69567a9a4900";
-    hash = "sha256-IDxylx61HTYki34Ehy3hgHDua8F1b8xEV0IW8xjV6uI=";
+    rev = "74ade6cbed91bd58aee219010ded9d96598262cf";
+    hash = "sha256-b8CLOHc9Nje03Q6ePAwrNdqCBFKyyGXj251Clt2XoZQ=";
   };
 
   __structuredAttrs = true;
